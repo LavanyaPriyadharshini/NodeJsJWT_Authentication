@@ -1,0 +1,6 @@
+
+to create a project either use the below commands or create a folder manually and create a new project
+
+mkdir my-node-app
+cd my-node-app
+npm init -y
