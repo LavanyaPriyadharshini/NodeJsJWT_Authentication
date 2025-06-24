@@ -4,3 +4,46 @@ to create a project either use the below commands or create a folder manually an
 mkdir my-node-app
 cd my-node-app
 npm init -y
+
+install the necessary packages
+C:\Users\lavanyap\Desktop\node_jwt_authenticate>npm install express mongoose cors jsonwebtoken bcrypt
+
+npm install --save-dev nodemon
+
+mongo db atlas username and pwd
+
+lavanyap@redisolve.com  --- username
+GitHubDemo  --- pwd
+
+
+cluster username and db_password
+lavanyap
+685a770ca604c508c67cd5b1
+
+
+here we are using mongodb atlas
+
+
+below is the connection string code
+
+url in short
+mongo DB url = mongodb+srv://lavanyap:<db_password>@cluster0.j9xaklk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+Secretkey = myscretkey
+
+npm install dotenv --- install this
+
+const mongoose = require('mongoose');
+const uri = "mongodb+srv://lavanyap:<db_password>@cluster0.j9xaklk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+async function run() {
+  try {
+    // Create a Mongoose client with a MongoClientOptions object to set the Stable API version
+    await mongoose.connect(uri, clientOptions);
+    await mongoose.connection.db.admin().command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await mongoose.disconnect();
+  }
+}
+run().catch(console.dir);
