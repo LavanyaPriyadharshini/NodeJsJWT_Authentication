@@ -10,7 +10,9 @@ const userSchema = new mongoose.Schema(
     Age: { type: Number, required: true },
     Qualification: { type: String, required: true },
     email: { type: String, unique: true, required: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+
+        profileImage: { type: String } // ✅ NEW FIELD added
   },
   { collection: 'UserSignUP' } // ✅ correct placement: second argument
   //here if you want the same collection name and the registered values under this, then mention the collection explicitly here so that it wont convert the name in plural 

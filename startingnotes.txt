@@ -11,6 +11,7 @@ C:\Users\lavanyap\Desktop\node_jwt_authenticate>npm install express mongoose cor
 npm install --save-dev nodemon
 npm install body-parser cors
 npm install bcryptjs jsonwebtoken --- this package includes the jwt authentication mechanism and stores the password hashed
+npm install multer --- this package is for uploading the profile image and files 
 
 mongo db atlas username and pwd
 

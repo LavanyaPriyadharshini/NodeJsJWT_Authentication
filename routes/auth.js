@@ -1,103 +1,212 @@
-
-//here "auth" (auth.js) is the name of the controller in which we have various methods like Post register method and get methods etc
-
 const express = require('express');
-const bcrypt = require('bcryptjs'); // ✅ correct
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
-
 const User = require('../models/User');
-//here inside the models folder i have created a user.js file where i specified the properties and model data,with the mongo database connection
 
 const JWT_SECRET = 'ThisisthefirstjwtcodeprograminNodejs';
 
-// Register
-router.post('/register', async (req, res) => {  //this is a post method named as register
+// ✅ Multer setup
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Upload to /uploads folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
+
+// ====================================================
+// ✅ Register user (JSON only) -----------------------
+// POST http://localhost:5000/api/auth/register
+// Content-Type: application/json
+router.post('/register', async (req, res) => {
   try {
     const { name, DateofBirth, Age, Qualification, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email }); // ✅ fix
+    // Check existing user
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const salt = await bcrypt.genSalt(10); // ✅ fix
-    const hashedPassword = await bcrypt.hash(password, salt); // ✅ fix
-
-    const newUser = new User({ // ✅ fix
+    // Create new user
+    const newUser = new User({
       name,
       DateofBirth,
       Age,
       Qualification,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     await newUser.save();
-
     res.status(201).json({ message: 'User Registered successfully' });
+
   } catch (err) {
-    console.error(err); // Add this for debugging
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Login
+// ====================================================
+// ✅ Upload profile image (AFTER registration) -------
+// POST http://localhost:5000/api/auth/uploadProfileImage/:id
+// Content-Type: multipart/form-data
+// Form field: profileImage (File)
+router.post('/uploadProfileImage/:id', upload.single('profileImage'), async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const imagePath = req.file ? req.file.path : null;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profileImage: imagePath },
+      { new: true }
+    );
+
+    if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+
+    res.json({
+      message: 'Profile image uploaded successfully',
+      user: updatedUser,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ====================================================
+// ✅ Login -------------------------------------------
+// POST http://localhost:5000/api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }); // ✅ fix
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password); // ✅ fix
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const payload = { userId: user._id };
+    const payload = { userId: user._id }; //in this you can specify the payload with username, role, etc
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, message: 'Login successful' });
+
   } catch (err) {
-    console.error(err); // Add this too!
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ====================================================
+// ✅ Get all users -----------------------------------
+// GET http://localhost:5000/api/auth/getAllUsers
+router.get('/getAllUsers', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ====================================================
+// ✅ Get user by ID ----------------------------------
+// GET http://localhost:5000/api/auth/getUserById/:id
+router.get('/getUserById/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Build full public URL if image exists
+    const imageUrl = user.profileImage
+      ? `${req.protocol}://${req.get('host')}/${user.profileImage}`
+      : null;
+
+    // Send a custom JSON response including the full URL
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      DateofBirth: user.DateofBirth,
+      Age: user.Age,
+      Qualification: user.Qualification,
+      profileImageUrl: imageUrl // ✅ your usable image link
+    });
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 
 
-// Get all Registerd users -GET method
 
-router.get('/getAllUsers',async (req,res) => {
-    try{
-        const users = await User.find();
-        res.json(users);
+//update the values -- Update method
+
+router.put('/updateUser/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Extract fields you want to update from request body
+    const {
+      name,
+      DateofBirth,
+      Age,
+      Qualification,
+      email,
+      password // ⚠️ Usually you’d hash password here!
+    } = req.body;
+
+    // Build the update object dynamically
+    const updateFields = {};
+
+    if (name) updateFields.name = name;
+    if (DateofBirth) updateFields.DateofBirth = DateofBirth;
+    if (Age) updateFields.Age = Age;
+    if (Qualification) updateFields.Qualification = Qualification;
+    if (email) updateFields.email = email;
+    if (password) updateFields.password = password; // Normally you’d hash it here!
+
+    // Update the user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      //$set is a MongoDB update operator → it means:
+      // /“Set the given fields to these new values.”
+
+      { new: true } // ✅ Return the updated doc
+      // tells Mongoose: Please return the updated version instead.”
+
+
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    catch(err){
-        console.error(err);
-        res.status(500).json({message: 'Server error'});
-   }
-  
+    res.json({
+      message: 'User updated successfully',
+      user: updatedUser
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 
-
-//Get a user by id - GET method by id
-//while checking in postman call like this "http://localhost:5000/api/auth/getUserById/68621aea3976fa7751281b9b"
-
-router.get('/getUserById/:id' , async (req,res) => {
-    try{
-        const user=await User.findById(req.params.id);
-if(!user) return res.status(404).json({message: "User not found"});
-
-res.json(user);
-    }
-
-    catch(err){
-        console.error(err);
-        res.status(500).json({message : 'Server error'});
-    }
-});
 
 module.exports = router;
