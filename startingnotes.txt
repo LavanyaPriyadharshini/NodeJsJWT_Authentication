@@ -9,6 +9,8 @@ install the necessary packages
 C:\Users\lavanyap\Desktop\node_jwt_authenticate>npm install express mongoose cors jsonwebtoken bcrypt
 
 npm install --save-dev nodemon
+npm install body-parser cors
+npm install bcryptjs jsonwebtoken --- this package includes the jwt authentication mechanism and stores the password hashed
 
 mongo db atlas username and pwd
 
@@ -16,15 +18,6 @@ lavanyap@redisolve.com  --- username
 GitHubDemo  --- pwd
 
 
-cluster username and db_password
-lavanyap
-685a770ca604c508c67cd5b1
-
-
-here we are using mongodb atlas
-
-
-below is the connection string code
 
 url in short
 mongo DB url = mongodb+srv://lavanyap:<db_password>@cluster0.j9xaklk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

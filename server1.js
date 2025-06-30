@@ -4,14 +4,22 @@ const express=require('express');
 const mongoose=require('mongoose');
 const cors=require('cors');
 
-const authroutes=require('./auth/routes');
-
 const app=express();
 
-app.use(cors());
+
+
 app.use(express.json());
 
+app.use(cors());
 
+
+
+const authroutes = require('./routes/auth'); //the auth.js is inside the routes folder
+
+
+  app.use('/api/auth', authroutes);
+
+  
 //connect to database
 
 mongoose.connect('mongodb://localhost:27017/JWT_Authentication' , {
@@ -20,7 +28,6 @@ mongoose.connect('mongodb://localhost:27017/JWT_Authentication' , {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
-  app.use('/api/auth', authroutes);
 
   const PORT = 5000;
 
