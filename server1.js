@@ -16,8 +16,11 @@ app.use('/uploads', express.static('uploads'));  // for uploading static files l
 
 const authroutes = require('./routes/auth'); //the auth.js is inside the routes folder
 
+const agentroutes = require('./routes/agent'); //the auth.js is inside the routes folder
+
 
   app.use('/api/auth', authroutes);
+  app.use('/api/agent', agentroutes);
 
 
 //connect to database
