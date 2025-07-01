@@ -2,6 +2,8 @@
 
 const mongoose=require('mongoose');
 
+const mssql=require('mssql');
+
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,5 +21,6 @@ const userSchema = new mongoose.Schema(
   //if you dont explicitly mention the created collection name as like you created in the mongo db ,then you will see an extra plural form of the collection name in the mongo db 
   //compass where the registered records will defaultly saved in the plural name of the collection., so to avoid these things we create the collection name
 );
+mosule.export=tablename
 
 module.exports=mongoose.model('UserSignUP',userSchema);
